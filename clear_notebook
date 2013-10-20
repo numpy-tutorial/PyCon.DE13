@@ -1,0 +1,56 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+simple script for clearing all cells of an ipython notebook
+
+Usage: `clear_notebook fname_in.ipynb [fname_out.ipynb]`
+"""
+import sys
+
+from IPython.nbformat.current import reads, writes
+
+
+def clear_outputs(fname_in, fname_out=None, clear_prompt_numbers=True):
+    """
+    clears the output of all cells in an ipython notebook
+
+    Parameters:
+    ===========
+
+    fname_in: string
+        filename of the incoming notebook
+
+    fname_out: string, optional
+        filename of the outgoing notebook
+        (default: fname_in)
+
+    clear_promt_numbers: bool, optional
+        clears the prompt numbers of all cells
+        (default: True)
+    """
+    if fname_out is None:
+        fname_out = fname_in
+
+    with open(fname_in) as nb_file:
+        notebook = reads(nb_file.read(), 'json')
+
+    for wsheet in notebook.worksheets:
+        for cell in wsheet.cells:
+            if cell.get('cell_type', None) == 'code':
+                cell.outputs = []
+                if clear_prompt_numbers is True:
+                    cell.pop('prompt_number', None)
+
+    with open(fname_out, 'w') as out:
+        out.write(writes(notebook, 'ipynb'))
+
+
+if __name__ == '__main__':
+    FNAME_IN = sys.argv[1]
+    if len(sys.argv) > 2:
+        FNAME_OUT = sys.argv[2]
+    else:
+        FNAME_OUT = None
+
+    print "clearing {}".format(FNAME_IN)
+    clear_outputs(FNAME_IN, FNAME_OUT)
